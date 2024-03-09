@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>家計簿アプリ</title>
+<style>
+  /* ボタンのスタイル */
+  .styled-button {
+    background-color: #32b3d0;
+    /* デフォルトの背景色 */
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 50px;
+    /* 丸みを追加 */
+  }
+
+  /* ホバーアクション */
+  .styled-button:hover {
+    background-color: #da1eb1;
+    /* ホバー時の背景色 */
+  }
+
+  /* 中央揃え */
+  .center-align {
+    text-align: center;
+  }
+
+ /* ロゴ画像のスタイル */
+ .logo-container {
+    text-align: center;
+  }
+
+  .logo {
+    display: inline-block;
+  }
+
+
+</style>
+</head>
+<body>
+
+<!-- タイトル -->
+<div class="logo-container">
+  <h1><img src="img/kakeibo2.png" alt="" class="logo"></h1>
+</div>
+
+<div class="center-align">
+  <form id="expense-form">
+    <label for="date">日付:</label>
+    <input type="date" id="date" name="date">
+    <br>
+    <br>
+    <label for="item">項目:　</label>
+    <select id="item" name="item">
+      <option value="食事">🍴食事🍴</option>
+      <option value="日用品">🧹日用品🧻</option>
+      <option value="交通費">🚞交通費🚗</option>
+      <option value="衣服">👔衣服👚</option>
+      <option value="交際費">❤️交際費❤️</option>
+      <option value="趣味">🏸趣味🎨🎵</option>
+      <option value="コスメ">🧴コスメ💄</option>
+      <option value="to">to</option> <!-- 新たに追加 -->
+    </select>
+    <br>
+    <br>
+    <label for="amount">金額:</label>
+    <input type="number" id="amount" name="amount" min="0">
+    <span>円</span> <!-- 金額の表示に円を追加 -->
+    <br>
+    <br>
+    <!-- ボタンにクラスを付けてスタイルを適用 -->
+    <button type="button" class="styled-button" id="submit-button">追加</button>
+  </form>
+
+  <div id="total-amount"></div>
+
+</div>
+
+<div id="expenses-list">
+  <!-- ここに家計簿のデータが表示されます -->
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+  // Firebaseの構成
+  const firebaseConfig = {
+    apiKey: "AIzaSyD_xC9EWLjBaooDsBOj3KPMhIqoffTc7Wc",
+    authDomain: "kakeibo2-3a6cd.firebaseapp.com",
+    databaseURL: "https://kakeibo2-3a6cd-default-rtdb.firebaseio.com",
+    projectId: "kakeibo2-3a6cd",
+    storageBucket: "kakeibo2-3a6cd.appspot.com",
+    messagingSenderId: "872262479811",
+    appId: "1:872262479811:web:9a9e916a7ea0a1588b9776"
+  };
+
+  // Firebase初期化
+  firebase.initializeApp(firebaseConfig);
+
+  // データベースの参照を取得
+  const db = firebase.database();
+  const dbRef = db.ref("expenses");
+
+  // ボタン要素を取得
+  const submitButton = document.getElementById('submit-button');
+
+  // カウンター初期化
+  let counter = 0;
+
+  // 合計金額の初期化
+  let totalAmount = 0;
+
+  // ボタンにクリックイベントリスナーを追加
+  submitButton.addEventListener('click', () => {
+    // フォームから日付、項目、金額を取得
+    const date = document.getElementById('date').value;
+    const item = document.getElementById('item').value;
+    const amount = parseInt(document.getElementById('amount').value); // 金額を整数に変換
+
+    // カウンターをインクリメントして3回目のデータ登録時にアラートを表示
+    counter++;
+    if (counter === 3) {
+      alert("お金使いすぎ注意！");
+    }
+
+    // ボタンをクリックしたときの音声ファイルを再生
+    const clickSound = new Audio('./sounds/選択2.mp3');
+    clickSound.play();
+
+    // Firebase Realtime Databaseにデータを送信
+    const expenseData = {
+      date: date,
+      item: item,
+      amount: amount
+    };
+    dbRef.push(expenseData);
+
+    // 合計金額を更新
+    totalAmount += amount;
+
+    // 合計金額を表示する要素に表示
+    const totalAmountElement = document.getElementById('total-amount');
+    totalAmountElement.textContent = `合計金額: ${totalAmount}円`;
+  });
+
+  // Firebase Realtime Databaseにデータが追加されたときの処理
+  dbRef.on("child_added", function(snapshot) {
+    const expenseData = snapshot.val();
+    const key = snapshot.key;
+    // 表示用の処理を追加
+    const expenseElement = document.createElement("div");
+    expenseElement.textContent = `日付: ${expenseData.date}, 項目: ${expenseData.item}, 金額: ${expenseData.amount}円`; // 金額の表示に円を追加
+    document.getElementById("expenses-list").appendChild(expenseElement);
+  });
+</script>
+
+</body>
+</html>
+
+
